@@ -484,7 +484,64 @@
 					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
-				sections = {};
+				doEvent = function(id, type) {
+	
+					var name = id.split(/-[a-z]+$/)[0], i;
+	
+					if (name in sections
+					&&	'events' in sections[name]
+					&&	type in sections[name].events)
+						for (i in sections[name].events[type])
+							(sections[name].events[type][i])();
+	
+				},
+				sections = {
+					'one': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'G-Z7HH9JWGSV', { 'page_path': '/#one' });
+								},
+							],
+						},
+					},
+					'two': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'G-Z7HH9JWGSV', { 'page_path': '/#two' });
+								},
+							],
+						},
+					},
+					'three': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'G-Z7HH9JWGSV', { 'page_path': '/#three' });
+								},
+							],
+						},
+					},
+					'four': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'G-Z7HH9JWGSV', { 'page_path': '/#four' });
+								},
+							],
+						},
+					},
+					'home': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'G-Z7HH9JWGSV', { 'page_path': '/' });
+								},
+							],
+						},
+					},
+				};
 	
 			// Expose doNextSection, doPreviousSection, doFirstSection, doLastSection.
 				window._next = doNextSection;
@@ -606,6 +663,9 @@
 	
 					// Activate initial section.
 						initialSection.classList.add('active');
+	
+						// Event: On Open.
+							doEvent(initialId, 'onopen');
 	
 					// Load elements.
 						loadElements(initialSection);
@@ -759,6 +819,9 @@
 										// Unload elements.
 											unloadElements(currentSection);
 	
+											// Event: On Close.
+												doEvent(currentSection.id, 'onclose');
+	
 										// Hide.
 											setTimeout(function() {
 												currentSection.style.display = 'none';
@@ -829,6 +892,9 @@
 												// Activate.
 													section.classList.remove('inactive');
 													section.classList.add('active');
+	
+													// Event: On Open.
+														doEvent(section.id, 'onopen');
 	
 												// Temporarily restore target heights.
 													section.style.minHeight = sectionHeight + 'px';
@@ -1370,6 +1436,482 @@
 	
 		})();
 	
+	// "On Visible" animation.
+		var onvisible = {
+	
+			/**
+			 * Effects.
+			 * @var {object}
+			 */
+			effects: {
+				'blur-in': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'filter ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.opacity = 0;
+						this.style.filter = 'blur(' + (0.25 * intensity) + 'rem)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.filter = 'none';
+					},
+				},
+				'zoom-in': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transform = 'scale(' + (1 - ((alt ? 0.25 : 0.05) * intensity)) + ')';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'zoom-out': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transform = 'scale(' + (1 + ((alt ? 0.25 : 0.05) * intensity)) + ')';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'slide-left': {
+					transition: function (speed, delay) {
+						return 'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function() {
+						this.style.transform = 'translateX(100vw)';
+					},
+					play: function() {
+						this.style.transform = 'none';
+					},
+				},
+				'slide-right': {
+					transition: function (speed, delay) {
+						return 'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function() {
+						this.style.transform = 'translateX(-100vw)';
+					},
+					play: function() {
+						this.style.transform = 'none';
+					},
+				},
+				'flip-forward': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transformOrigin = '50% 50%';
+						this.style.transform = 'perspective(1000px) rotateX(' + ((alt ? 45 : 15) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'flip-backward': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transformOrigin = '50% 50%';
+						this.style.transform = 'perspective(1000px) rotateX(' + ((alt ? -45 : -15) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'flip-left': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transformOrigin = '50% 50%';
+						this.style.transform = 'perspective(1000px) rotateY(' + ((alt ? 45 : 15) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'flip-right': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transformOrigin = '50% 50%';
+						this.style.transform = 'perspective(1000px) rotateY(' + ((alt ? -45 : -15) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'tilt-left': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transform = 'rotate(' + ((alt ? 45 : 5) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'tilt-right': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity, alt) {
+						this.style.opacity = 0;
+						this.style.transform = 'rotate(' + ((alt ? -45 : -5) * intensity) + 'deg)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'fade-right': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.opacity = 0;
+						this.style.transform = 'translateX(' + (-1.5 * intensity) + 'rem)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'fade-left': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.opacity = 0;
+						this.style.transform = 'translateX(' + (1.5 * intensity) + 'rem)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'fade-down': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.opacity = 0;
+						this.style.transform = 'translateY(' + (-1.5 * intensity) + 'rem)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'fade-up': {
+					transition: function (speed, delay) {
+						return	'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.opacity = 0;
+						this.style.transform = 'translateY(' + (1.5 * intensity) + 'rem)';
+					},
+					play: function() {
+						this.style.opacity = 1;
+						this.style.transform = 'none';
+					},
+				},
+				'fade-in': {
+					transition: function (speed, delay) {
+						return 'opacity ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function() {
+						this.style.opacity = 0;
+					},
+					play: function() {
+						this.style.opacity = 1;
+					},
+				},
+				'fade-in-background': {
+					custom: true,
+					transition: function (speed, delay) {
+	
+						this.style.setProperty('--onvisible-speed', speed + 's');
+	
+						if (delay)
+							this.style.setProperty('--onvisible-delay', delay + 's');
+	
+					},
+					rewind: function() {
+						this.style.removeProperty('--onvisible-background-color');
+					},
+					play: function() {
+						this.style.setProperty('--onvisible-background-color', 'rgba(0,0,0,0.001)');
+					},
+				},
+				'zoom-in-image': {
+					target: 'img',
+					transition: function (speed, delay) {
+						return 'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function() {
+						this.style.transform = 'scale(1)';
+					},
+					play: function(intensity) {
+						this.style.transform = 'scale(' + (1 + (0.1 * intensity)) + ')';
+					},
+				},
+				'zoom-out-image': {
+					target: 'img',
+					transition: function (speed, delay) {
+						return 'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.transform = 'scale(' + (1 + (0.1 * intensity)) + ')';
+					},
+					play: function() {
+						this.style.transform = 'none';
+					},
+				},
+				'focus-image': {
+					target: 'img',
+					transition: function (speed, delay) {
+						return	'transform ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '') + ', ' +
+								'filter ' + speed + 's ease' + (delay ? ' ' + delay + 's' : '');
+					},
+					rewind: function(intensity) {
+						this.style.transform = 'scale(' + (1 + (0.05 * intensity)) + ')';
+						this.style.filter = 'blur(' + (0.25 * intensity) + 'rem)';
+					},
+					play: function(intensity) {
+						this.style.transform = 'none';
+						this.style.filter = 'none';
+					},
+				},
+			},
+	
+			/**
+			 * Adds one or more animatable elements.
+			 * @param {string} selector Selector.
+			 * @param {object} settings Settings.
+			 */
+			add: function(selector, settings) {
+	
+				var style = settings.style in this.effects ? settings.style : 'fade',
+					speed = parseInt('speed' in settings ? settings.speed : 1000) / 1000,
+					intensity = ((parseInt('intensity' in settings ? settings.intensity : 5) / 10) * 1.75) + 0.25,
+					delay = parseInt('delay' in settings ? settings.delay : 0) / 1000,
+					offset = parseInt('offset' in settings ? settings.offset : 0),
+					mode = parseInt('mode' in settings ? settings.mode : 3),
+					replay = 'replay' in settings ? settings.replay : false,
+					stagger = 'stagger' in settings ? (parseInt(settings.stagger) / 1000) : false,
+					state = 'state' in settings ? settings.state : null,
+					effect = this.effects[style];
+	
+				// Step through selected elements.
+					$$(selector).forEach(function(e) {
+	
+						var	children = (stagger !== false) ? e.querySelectorAll(':scope > li, :scope ul > li') : null,
+							enter = function(staggerDelay=0) {
+	
+								var	_this = this,
+									transitionOrig;
+	
+								// Target provided? Use it instead of element.
+									if (effect.target)
+										_this = this.querySelector(effect.target);
+	
+								// Not a custom effect?
+									if (!effect.custom) {
+	
+										// Save original transition.
+											transitionOrig = _this.style.transition;
+	
+										// Apply temporary styles.
+											_this.style.setProperty('backface-visibility', 'hidden');
+	
+										// Apply transition.
+											_this.style.transition = effect.transition(speed, delay + staggerDelay);
+	
+									}
+	
+								// Otherwise, call custom transition handler.
+									else
+										effect.transition.apply(_this, [speed, delay + staggerDelay]);
+	
+								// Play.
+									effect.play.apply(_this, [intensity, !!children]);
+	
+								// Not a custom effect?
+									if (!effect.custom)
+										setTimeout(function() {
+	
+											// Remove temporary styles.
+												_this.style.removeProperty('backface-visibility');
+	
+											// Restore original transition.
+												_this.style.transition = transitionOrig;
+	
+										}, (speed + delay + staggerDelay) * 1000 * 2);
+	
+							},
+							leave = function() {
+	
+								var	_this = this,
+									transitionOrig;
+	
+								// Target provided? Use it instead of element.
+									if (effect.target)
+										_this = this.querySelector(effect.target);
+	
+								// Not a custom effect?
+									if (!effect.custom) {
+	
+										// Save original transition.
+											transitionOrig = _this.style.transition;
+	
+										// Apply temporary styles.
+											_this.style.setProperty('backface-visibility', 'hidden');
+	
+										// Apply transition.
+											_this.style.transition = effect.transition(speed);
+	
+									}
+	
+								// Otherwise, call custom transition handler.
+									else
+										effect.transition.apply(_this, [speed]);
+	
+								// Rewind.
+									effect.rewind.apply(_this, [intensity, !!children]);
+	
+								// Not a custom effect?
+									if (!effect.custom)
+										setTimeout(function() {
+	
+											// Remove temporary styles.
+												_this.style.removeProperty('backface-visibility');
+	
+											// Restore original transition.
+												_this.style.transition = transitionOrig;
+	
+										}, speed * 1000 * 2);
+	
+							},
+							targetElement, triggerElement;
+	
+						// Initial rewind.
+	
+							// Determine target element.
+								if (effect.target)
+									targetElement = e.querySelector(effect.target);
+								else
+									targetElement = e;
+	
+							// Children? Rewind each individually.
+								if (children)
+									children.forEach(function(targetElement) {
+										effect.rewind.apply(targetElement, [intensity, true]);
+									});
+	
+							// Otherwise. just rewind element.
+								else
+									effect.rewind.apply(targetElement, [intensity]);
+	
+						// Determine trigger element.
+							triggerElement = e;
+	
+							// Has a parent?
+								if (e.parentNode) {
+	
+									// Parent is an onvisible trigger? Use it.
+										if (e.parentNode.dataset.onvisibleTrigger)
+											triggerElement = e.parentNode;
+	
+									// Otherwise, has a grandparent?
+										else if (e.parentNode.parentNode) {
+	
+											// Grandparent is an onvisible trigger? Use it.
+												if (e.parentNode.parentNode.dataset.onvisibleTrigger)
+													triggerElement = e.parentNode.parentNode;
+	
+										}
+	
+								}
+	
+						// Add scroll event.
+							scrollEvents.add({
+								element: e,
+								triggerElement: triggerElement,
+								offset: offset,
+								mode: mode,
+								initialState: state,
+								enter: children ? function() {
+	
+									var staggerDelay = 0;
+	
+									// Step through children.
+										children.forEach(function(e) {
+	
+											// Apply enter handler.
+												enter.apply(e, [staggerDelay]);
+	
+											// Increment stagger delay.
+												staggerDelay += stagger;
+	
+										});
+	
+								} : enter,
+								leave: (replay ? (children ? function() {
+	
+									// Step through children.
+										children.forEach(function(e) {
+	
+											// Apply leave handler.
+												leave.apply(e);
+	
+										});
+	
+								} : leave) : null),
+							});
+	
+					});
+	
+				},
+	
+		};
+	
 	// Slideshow backgrounds.
 	
 		/**
@@ -1735,5 +2277,49 @@
 			});
 		
 		})();
+	
+	// "On Visible" animations.
+		onvisible.add('#text10', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text07', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text02', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons02', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text05', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text20', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text11', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons04', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: false });
+		onvisible.add('#image03', { style: 'fade-down', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text03', { style: 'fade-up', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider04', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text09', { style: 'fade-up', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider06', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text08', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text21', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons10', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: false });
+		onvisible.add('#divider09', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider03', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons03', { style: 'fade-left', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text12', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider07', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text13', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons06', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text14', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider01', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text15', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons08', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text19', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider05', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider02', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text18', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider11', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text06', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#divider08', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text01', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: false });
+		onvisible.add('#divider10', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text04', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons05', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text17', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#icons02', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#buttons09', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
+		onvisible.add('#text16', { style: 'fade-right', speed: 1000, intensity: 5, delay: 0, replay: true });
 
 })();
